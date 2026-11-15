@@ -92,6 +92,25 @@
   background-clip: padding-box, padding-box, border-box;
 }
 
+/*
+ * Spinning brand gradient. Put a `spin-layer` element inside a box with
+ * `relative isolate overflow-hidden`; the script in Navbar.astro rotates it.
+ * The layer is a large square (3× the box width) so it always covers the box
+ * while it turns; the colour stops sit at the box's own left/right edges, so at
+ * rest it looks exactly like the plain left → right gradient.
+ */
+@utility spin-layer {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: -1;
+  width: 300%;
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  background-image: linear-gradient(to right, var(--brand) 33.333%, var(--brand-deep) 66.667%);
+  pointer-events: none;
+}
+
 /* Stroke icons with the brand gradient (defined once in Navbar.astro as #brand-gradient). */
 @utility icon-gradient {
   stroke: url(#brand-gradient);

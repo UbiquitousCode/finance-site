@@ -71,15 +71,23 @@ const gradientBorder = 'border border-gradient dark:border-line dark:bg-none dar
 const pill = `inline-flex h-9 items-center gap-1 rounded-ui ${gradientBorder} [--fill:var(--layer-1)] px-3 text-sm font-semibold text-ink ${focusRing}`;
 
 // Light shadow used to lift the navbar and search panel off the page (no borders).
-const softShadow = 'shadow-[0_2px_8px_rgb(0_0_0/0.08)] dark:shadow-[0_2px_8px_rgb(0_0_0/0.6)]';
+const softShadow = 'shadow-[0_4px_12px_rgb(0_0_0/0.12)] dark:shadow-[0_4px_12px_rgb(0_0_0/0.7)]';
 
 // Mobile tab/search button. The item under the sliding highlight (data-active) turns white.
 const mobileItem =
 	'group relative flex h-full items-center justify-center rounded-ui transition-colors duration-300 data-active:text-white focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand';
 
-// Search drop-down on mobile: under the whole nav bar, 80% wide. Lavender in light mode, layer 2 in dark.
-const searchPanel =
-	`absolute left-1/2 top-full hidden w-4/5 -translate-x-1/2 rounded-b-ui bg-layer-1 bg-gradient-to-r from-brand/20 to-brand-deep/20 p-3 ${softShadow} dark:bg-layer-2 dark:from-layer-2 dark:to-layer-2 [&.open]:block`;
+// Panels that slide out from under the navbar (mobile search, desktop drop-downs).
+// Brand gradient at 20% over #f5f5f5 in light mode, layer 2 in dark; no border, soft shadow.
+// Each sits in a clipping strip just below the navbar and slides down when `.open` is set on the strip.
+// Opening shows it instantly (so focus can move into it); closing keeps it visible until the slide finishes.
+const slidePanel = `pointer-events-auto invisible -translate-y-full rounded-b-ui bg-layer-1 bg-gradient-to-r from-brand/20 to-brand-deep/20 ${softShadow} dark:bg-layer-2 dark:from-layer-2 dark:to-layer-2 transition-[translate,visibility] duration-300 ease-out motion-reduce:transition-none [.open>&]:visible [.open>&]:translate-y-0 [.open>&]:transition-[translate]`;
+
+// Search drop-down on mobile: under the whole nav bar, 80% wide.
+const searchPanel = `${slidePanel} mx-auto w-4/5 p-3`;
+
+// Desktop menu drop-down, under its button.
+const menuPanel = `${slidePanel} flex w-max min-w-44 flex-col p-1`;
 ---
 
 <header class={`sticky top-0 z-50 bg-layer-1 ${softShadow}`}>
@@ -107,10 +115,12 @@ const searchPanel =
 		<div class={`relative col-span-2 grid h-12 grid-cols-subgrid overflow-hidden rounded-ui border border-gradient-tinted dark:border-line dark:bg-none dark:bg-layer-2`}>
 			<!-- Sliding highlight: moved under the selected tab (or the search button while search is open) by the script below -->
 			<span
-				class="pointer-events-none absolute inset-y-0 left-0 rounded-ui bg-gradient-to-r from-brand to-brand-deep opacity-0 transition-[translate,width,opacity] duration-300 ease-out motion-reduce:transition-none dark:bg-none dark:bg-line"
+				class="pointer-events-none absolute inset-y-0 left-0 isolate overflow-hidden rounded-ui opacity-0 transition-[translate,width,opacity] duration-300 ease-out motion-reduce:transition-none dark:bg-line"
 				aria-hidden="true"
 				data-tab-indicator
-			></span>
+			>
+				<span class="spin-layer dark:hidden" data-spin-layer></span>
+			</span>
 			<ul class="flex h-full">
 				{
 					menus.map((menu) => (
@@ -155,16 +165,19 @@ const searchPanel =
 			</button>
 		</div>
 
-		<form id="m-search" action="/search" method="get" role="search" class={searchPanel}>
-			<label for="m-search-input" class="sr-only">Search</label>
-			<input
-				id="m-search-input"
-				name="q"
-				type="search"
-				placeholder="What are you looking for?"
-				class="w-full rounded-ui border-0 bg-layer-2 px-4 py-2 text-sm text-ink outline-none placeholder:text-ink/60 dark:bg-line"
-			/>
-		</form>
+		<!-- Clipping strip directly under the navbar (extra bottom padding leaves room for the panel's shadow) -->
+		<div id="m-search" class="pointer-events-none absolute inset-x-0 top-full overflow-hidden pb-6">
+			<form action="/search" method="get" role="search" class={searchPanel}>
+				<label for="m-search-input" class="sr-only">Search</label>
+				<input
+					id="m-search-input"
+					name="q"
+					type="search"
+					placeholder="What are you looking for?"
+					class="w-full rounded-ui border-0 bg-layer-2 px-4 py-2 text-sm text-ink outline-none placeholder:text-ink/60 dark:bg-line"
+				/>
+			</form>
+		</div>
 	</nav>
 
 	<!-- ───────────── Desktop (lg+) ───────────── -->
@@ -175,10 +188,10 @@ const searchPanel =
 			</svg>
 		</a>
 
-		<ul class="flex items-center gap-2">
+		<ul class="flex items-center gap-2 self-stretch">
 			{
 				menus.map((menu, i) => (
-					<li class="relative">
+					<li class="relative flex h-full items-center">
 						<button type="button" class={pill} aria-expanded="false" aria-controls={`d-menu-${i}`} data-toggle>
 							{menu.label}
 							<svg
@@ -192,21 +205,18 @@ const searchPanel =
 								<path d="m6 9 6 6 6-6" />
 							</svg>
 						</button>
-						<ul
-							id={`d-menu-${i}`}
-							class="absolute left-0 top-full mt-2 hidden min-w-44 flex-col rounded-ui border border-line bg-layer-2 p-1 shadow-lg [&.open]:flex"
-						>
-							{menu.links.map((link) => (
-								<li>
-									<a
-										href={link.href}
-										class="block rounded-ui px-3 py-2 text-sm text-ink"
-									>
-										{link.label}
-									</a>
-								</li>
-							))}
-						</ul>
+						<!-- Clipping strip under the navbar (padding leaves room for the shadow) -->
+						<div id={`d-menu-${i}`} class="pointer-events-none absolute -left-6 top-full overflow-hidden px-6 pb-6">
+							<ul class={menuPanel}>
+								{menu.links.map((link) => (
+									<li>
+										<a href={link.href} class="block rounded-ui px-3 py-2 text-sm text-ink">
+											{link.label}
+										</a>
+									</li>
+								))}
+							</ul>
+						</div>
 					</li>
 				))
 			}
@@ -219,7 +229,7 @@ const searchPanel =
 				name="q"
 				type="search"
 				placeholder="What are you looking for?"
-				class="h-9 w-full rounded-ui border border-line bg-layer-1 pl-4 pr-10 text-sm text-ink placeholder:text-ink/60 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30 dark:bg-layer-2"
+				class={`h-9 w-full rounded-ui ${gradientBorder} [--fill:var(--layer-1)] pl-4 pr-10 text-sm text-ink placeholder:text-ink/60 focus:outline-none focus:ring-2 focus:ring-brand/30`}
 			/>
 			<button
 				type="submit"
@@ -236,8 +246,10 @@ const searchPanel =
 		<div class="ml-auto flex items-center gap-4">
 			<a
 				href="/how-to-use"
-				class={`inline-flex h-9 items-center rounded-ui bg-gradient-to-r from-brand to-brand-deep px-6 text-sm font-semibold text-white shadow-sm ${focusRing}`}
+				class={`relative isolate inline-flex h-9 items-center overflow-hidden rounded-ui px-6 text-sm font-semibold text-white shadow-sm ${focusRing}`}
+				data-spin-on-hover
 			>
+				<span class="spin-layer" aria-hidden="true" data-spin-layer></span>
 				How to use
 			</a>
 
@@ -262,6 +274,44 @@ const searchPanel =
 	const toggles = [...document.querySelectorAll<HTMLElement>('[data-toggle]')];
 	const panelFor = (t: HTMLElement) => document.getElementById(t.getAttribute('aria-controls')!);
 
+	// ── Spinning gradient ──
+	// Turns a `[data-spin-layer]` at a steady speed. Stopping lets it finish the
+	// current turn so it always comes to rest at the plain left → right gradient.
+	const SPIN_MS = 4000;
+	const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+	const spins = new WeakMap<Element, Animation>();
+
+	function spin(layer: Element | null | undefined, on: boolean) {
+		if (!layer) return;
+		let anim = spins.get(layer);
+		if (on) {
+			if (reduceMotion.matches) return;
+			if (anim && anim.playState !== 'finished') {
+				anim.onfinish = null;
+				anim.effect?.updateTiming({ iterations: Infinity });
+				return;
+			}
+			anim = layer.animate([{ rotate: '0deg' }, { rotate: '360deg' }], {
+				duration: SPIN_MS,
+				iterations: Infinity,
+			});
+			spins.set(layer, anim);
+		} else if (anim) {
+			const elapsed = Number(anim.currentTime ?? 0);
+			anim.effect?.updateTiming({ iterations: Math.floor(elapsed / SPIN_MS) + 1 });
+			anim.onfinish = () => {
+				anim!.cancel();
+				spins.delete(layer);
+			};
+		}
+	}
+
+	for (const el of document.querySelectorAll<HTMLElement>('[data-spin-on-hover]')) {
+		const layer = el.querySelector('[data-spin-layer]');
+		el.addEventListener('pointerenter', () => spin(layer, true));
+		el.addEventListener('pointerleave', () => spin(layer, false));
+	}
+
 	// ── Mobile tab bar ──
 	// One sliding highlight sits under the selected tab. While search is open it
 	// slides to the search button, then slides back (or fades out) when search closes.
@@ -275,6 +325,7 @@ const searchPanel =
 	function moveIndicator(target: HTMLElement | null, animate = true) {
 		if (!indicator) return;
 		for (const el of [...tabs, mobileSearch]) el?.toggleAttribute('data-active', el === target);
+		spin(indicator.querySelector('[data-spin-layer]'), !!target); // spins while something is selected
 		if (!target) {
 			indicator.style.opacity = '0';
 			return;
