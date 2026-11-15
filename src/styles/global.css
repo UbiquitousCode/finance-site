@@ -1,0 +1,104 @@
+@import "tailwindcss";
+
+/* `dark:` follows the OS setting, but respects <html data-theme="light|dark"> overrides. */
+@custom-variant dark {
+  &:where([data-theme="dark"], [data-theme="dark"] *) {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    &:where(:root:not([data-theme="light"]) *) {
+      @slot;
+    }
+  }
+}
+
+/*
+ * Colour tokens from the wireframe palette.
+ * Light mode is the default; dark mode follows the OS setting, and can be
+ * forced either way with <html data-theme="light|dark">.
+ */
+:root {
+  --brand: #8d00f2;
+  --brand-deep: #10006b; /* end stop of the purple → navy gradient */
+
+  --bg: #f5f5f5;
+  --layer-1: #f5f5f5; /* navbar */
+  --layer-2: #ffffff; /* pills, inputs */
+  --border: #8d00f2;
+  --text: #231f20;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121212;
+    --layer-1: #1e1e1e;
+    --layer-2: #242424;
+    --border: #3f3f46;
+    --text: #f5f5f5;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #121212;
+  --layer-1: #1e1e1e;
+  --layer-2: #242424;
+  --border: #3f3f46;
+  --text: #f5f5f5;
+}
+
+@theme {
+  --radius-ui: 10px; /* every rounded corner: `rounded-ui` */
+}
+
+@theme inline {
+  --color-brand: var(--brand);
+  --color-brand-deep: var(--brand-deep);
+  --color-bg: var(--bg);
+  --color-layer-1: var(--layer-1);
+  --color-layer-2: var(--layer-2);
+  --color-line: var(--border);
+  --color-ink: var(--text);
+}
+
+/*
+ * 1px border painted with the brand gradient (same as the "How to use" fill),
+ * over a fill colour (white by default; change with `[--fill:…]`). Pair with
+ * `border` for the width; undo in dark mode with `dark:bg-none dark:border-line`.
+ */
+@utility border-gradient {
+  border-color: transparent;
+  background-image:
+    linear-gradient(var(--fill, var(--layer-2)), var(--fill, var(--layer-2))),
+    linear-gradient(to right, var(--brand), var(--brand-deep));
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+}
+
+/*
+ * Mobile tab bar: gradient border, filled with the brand gradient at 5% over
+ * solid #f5f5f5 (layer 1). Undo in dark mode like `border-gradient`.
+ */
+@utility border-gradient-tinted {
+  border-color: transparent;
+  background-image:
+    linear-gradient(
+      to right,
+      color-mix(in srgb, var(--brand) 5%, transparent),
+      color-mix(in srgb, var(--brand-deep) 5%, transparent)
+    ),
+    linear-gradient(var(--layer-1), var(--layer-1)),
+    linear-gradient(to right, var(--brand), var(--brand-deep));
+  background-origin: border-box;
+  background-clip: padding-box, padding-box, border-box;
+}
+
+/* Stroke icons with the brand gradient (defined once in Navbar.astro as #brand-gradient). */
+@utility icon-gradient {
+  stroke: url(#brand-gradient);
+}
+
+@layer base {
+  body {
+    @apply bg-bg text-ink antialiased;
+  }
+}
