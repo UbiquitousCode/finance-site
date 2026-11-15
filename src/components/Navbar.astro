@@ -1,0 +1,342 @@
+---
+/**
+ * Site navbar, built from the desktop and mobile light/dark wireframes.
+ * Edit `menus` to change the dropdowns; the links below are placeholders.
+ *
+ * Any button with `data-toggle` + `aria-controls` opens/closes the element with
+ * that id (adds the `open` class). Only one is open at a time.
+ */
+type Icon = 'goals' | 'info' | 'download' | 'article';
+
+interface Menu {
+	label: string;
+	icon: Icon;
+	links: { label: string; href: string }[];
+}
+
+const menus: Menu[] = [
+	{
+		label: 'Personal Goals',
+		icon: 'goals',
+		links: [
+			{ label: 'Saving', href: '/goals/saving' },
+			{ label: 'Budgeting', href: '/goals/budgeting' },
+			{ label: 'Paying off debt', href: '/goals/debt' },
+		],
+	},
+	{
+		label: 'Information',
+		icon: 'info',
+		links: [
+			{ label: 'Guides', href: '/information/guides' },
+			{ label: 'Glossary', href: '/information/glossary' },
+			{ label: 'FAQs', href: '/information/faqs' },
+		],
+	},
+	{
+		label: 'Downloadables',
+		icon: 'download',
+		links: [
+			{ label: 'Templates', href: '/downloads/templates' },
+			{ label: 'Worksheets', href: '/downloads/worksheets' },
+		],
+	},
+	{
+		label: 'Articles',
+		icon: 'article',
+		links: [
+			{ label: 'Latest', href: '/articles' },
+			{ label: 'Popular', href: '/articles/popular' },
+		],
+	},
+];
+
+// SVG path data for the mobile tab icons (24×24, stroked).
+const icons: Record<Icon, string> = {
+	goals: 'M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm7 5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5Zm-5 10c.8-2.3 2.7-3.5 5-3.5s4.2 1.2 5 3.5',
+	info: 'M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm7 8v6m0-9.5v.5',
+	download: 'M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5Zm0 0v5h5M12 11v6m-3-3 3 3 3-3',
+	article: 'M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5Zm0 0v5h5M9 13h6M9 17h6',
+};
+
+const focusRing = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand';
+
+// Icons: brand gradient in light mode; plain colour in dark mode or on a selected (gradient) item.
+const icon = 'icon-gradient dark:stroke-current group-data-active:stroke-current';
+
+// Light mode: gradient border. Dark mode: solid #3f3f46 border.
+const gradientBorder = 'border border-gradient dark:border-line dark:bg-none dark:bg-layer-2';
+
+// Desktop menu buttons: #f5f5f5 fill in light mode (layer 1, same as the navbar).
+const pill = `inline-flex h-9 items-center gap-1 rounded-ui ${gradientBorder} [--fill:var(--layer-1)] px-3 text-sm font-semibold text-ink ${focusRing}`;
+
+// Light shadow used to lift the navbar and search panel off the page (no borders).
+const softShadow = 'shadow-[0_2px_8px_rgb(0_0_0/0.08)] dark:shadow-[0_2px_8px_rgb(0_0_0/0.6)]';
+
+// Mobile tab/search button. The item under the sliding highlight (data-active) turns white.
+const mobileItem =
+	'group relative flex h-full items-center justify-center rounded-ui transition-colors duration-300 data-active:text-white focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand';
+
+// Search drop-down on mobile: under the whole nav bar, 80% wide. Lavender in light mode, layer 2 in dark.
+const searchPanel =
+	`absolute left-1/2 top-full hidden w-4/5 -translate-x-1/2 rounded-b-ui bg-layer-1 bg-gradient-to-r from-brand/20 to-brand-deep/20 p-3 ${softShadow} dark:bg-layer-2 dark:from-layer-2 dark:to-layer-2 [&.open]:block`;
+---
+
+<header class={`sticky top-0 z-50 bg-layer-1 ${softShadow}`}>
+	<!-- Gradient used by `icon-gradient` (see global.css) -->
+	<svg class="absolute size-0" aria-hidden="true" focusable="false">
+		<linearGradient id="brand-gradient" x1="0" y1="0" x2="1" y2="0">
+			<stop offset="0" style="stop-color: var(--brand)" />
+			<stop offset="1" style="stop-color: var(--brand-deep)" />
+		</linearGradient>
+	</svg>
+
+	<!-- ───────────── Mobile (< lg) ───────────── -->
+	<!--
+		Three columns: logo | tabs (centred) | search (right-aligned).
+		The tab bar spans the last two columns, so its background starts at the
+		first tab and runs to the right edge behind the search button.
+	-->
+	<nav class="relative grid h-16 grid-cols-[1fr_auto_1fr] items-center gap-1 px-2.5 lg:hidden" aria-label="Main">
+		<a href="/" class={`justify-self-start rounded-ui text-brand ${focusRing}`} aria-label="Home">
+			<svg class={`size-7 ${icon}`} viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+				<path d="M2 9V2h7M23 2h7v7M30 23v7h-7M9 30H2v-7" />
+			</svg>
+		</a>
+
+		<div class={`relative col-span-2 grid h-12 grid-cols-subgrid overflow-hidden rounded-ui border border-gradient-tinted dark:border-line dark:bg-none dark:bg-layer-2`}>
+			<!-- Sliding highlight: moved under the selected tab (or the search button while search is open) by the script below -->
+			<span
+				class="pointer-events-none absolute inset-y-0 left-0 rounded-ui bg-gradient-to-r from-brand to-brand-deep opacity-0 transition-[translate,width,opacity] duration-300 ease-out motion-reduce:transition-none dark:bg-none dark:bg-line"
+				aria-hidden="true"
+				data-tab-indicator
+			></span>
+			<ul class="flex h-full">
+				{
+					menus.map((menu) => (
+						<li>
+							<button
+								type="button"
+								class={`flex-col gap-0.5 px-[7px] py-1 text-[10px] min-[390px]:px-2 min-[412px]:px-2.5 max-[374px]:px-1 max-[374px]:text-[9px] font-semibold leading-tight whitespace-nowrap text-ink ${mobileItem}`}
+								aria-pressed="false"
+								data-tab
+							>
+								<svg
+									class={`size-5 ${icon}`}
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									stroke-width="1.8"
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									aria-hidden="true"
+								>
+									<path d={icons[menu.icon]} />
+								</svg>
+								{menu.label}
+							</button>
+						</li>
+					))
+				}
+			</ul>
+
+			<button
+				type="button"
+				class={`w-9 justify-self-end text-ink ${mobileItem}`}
+				aria-label="Search"
+				aria-expanded="false"
+				aria-controls="m-search"
+				data-toggle
+			>
+				<svg class={`size-5 ${icon}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true">
+					<circle cx="10.5" cy="10.5" r="6.5" />
+					<path d="m15.5 15.5 5 5" stroke-linecap="round" />
+				</svg>
+			</button>
+		</div>
+
+		<form id="m-search" action="/search" method="get" role="search" class={searchPanel}>
+			<label for="m-search-input" class="sr-only">Search</label>
+			<input
+				id="m-search-input"
+				name="q"
+				type="search"
+				placeholder="What are you looking for?"
+				class="w-full rounded-ui border-0 bg-layer-2 px-4 py-2 text-sm text-ink outline-none placeholder:text-ink/60 dark:bg-line"
+			/>
+		</form>
+	</nav>
+
+	<!-- ───────────── Desktop (lg+) ───────────── -->
+	<nav class="mx-auto hidden h-14 max-w-7xl items-center gap-4 px-4 lg:flex" aria-label="Main">
+		<a href="/" class={`shrink-0 rounded-ui text-brand ${focusRing}`} aria-label="Home">
+			<svg class={`size-8 ${icon}`} viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+				<path d="M2 9V2h7M23 2h7v7M30 23v7h-7M9 30H2v-7" />
+			</svg>
+		</a>
+
+		<ul class="flex items-center gap-2">
+			{
+				menus.map((menu, i) => (
+					<li class="relative">
+						<button type="button" class={pill} aria-expanded="false" aria-controls={`d-menu-${i}`} data-toggle>
+							{menu.label}
+							<svg
+								class={`size-4 transition-transform [[aria-expanded=true]>&]:rotate-180 ${icon}`}
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2.5"
+								aria-hidden="true"
+							>
+								<path d="m6 9 6 6 6-6" />
+							</svg>
+						</button>
+						<ul
+							id={`d-menu-${i}`}
+							class="absolute left-0 top-full mt-2 hidden min-w-44 flex-col rounded-ui border border-line bg-layer-2 p-1 shadow-lg [&.open]:flex"
+						>
+							{menu.links.map((link) => (
+								<li>
+									<a
+										href={link.href}
+										class="block rounded-ui px-3 py-2 text-sm text-ink"
+									>
+										{link.label}
+									</a>
+								</li>
+							))}
+						</ul>
+					</li>
+				))
+			}
+		</ul>
+
+		<form action="/search" method="get" role="search" class="relative max-w-md flex-1">
+			<label for="d-search-input" class="sr-only">Search</label>
+			<input
+				id="d-search-input"
+				name="q"
+				type="search"
+				placeholder="What are you looking for?"
+				class="h-9 w-full rounded-ui border border-line bg-layer-1 pl-4 pr-10 text-sm text-ink placeholder:text-ink/60 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30 dark:bg-layer-2"
+			/>
+			<button
+				type="submit"
+				class="absolute right-1 top-1/2 inline-flex size-8 -translate-y-1/2 items-center justify-center rounded-ui text-ink"
+				aria-label="Search"
+			>
+				<svg class={`size-4 ${icon}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true">
+					<circle cx="10.5" cy="10.5" r="6.5" />
+					<path d="m15.5 15.5 5 5" stroke-linecap="round" />
+				</svg>
+			</button>
+		</form>
+
+		<div class="ml-auto flex items-center gap-4">
+			<a
+				href="/how-to-use"
+				class={`inline-flex h-9 items-center rounded-ui bg-gradient-to-r from-brand to-brand-deep px-6 text-sm font-semibold text-white shadow-sm ${focusRing}`}
+			>
+				How to use
+			</a>
+
+			<button type="button" class={`rounded-ui ${focusRing}`} aria-label="Language: English (UK)">
+				<svg class="h-4 w-8" viewBox="0 0 60 30" aria-hidden="true">
+					<clipPath id="uk-s"><path d="M0,0 v30 h60 v-30 z" /></clipPath>
+					<clipPath id="uk-t"><path d="M30,15 h30 v15 z v15 h-30 z h-30 v-15 z v-15 h30 z" /></clipPath>
+					<g clip-path="url(#uk-s)">
+						<path d="M0,0 v30 h60 v-30 z" fill="#012169" />
+						<path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" stroke-width="6" />
+						<path d="M0,0 L60,30 M60,0 L0,30" clip-path="url(#uk-t)" stroke="#C8102E" stroke-width="4" />
+						<path d="M30,0 v30 M0,15 h60" stroke="#fff" stroke-width="10" />
+						<path d="M30,0 v30 M0,15 h60" stroke="#C8102E" stroke-width="6" />
+					</g>
+				</svg>
+			</button>
+		</div>
+	</nav>
+</header>
+
+<script>
+	const toggles = [...document.querySelectorAll<HTMLElement>('[data-toggle]')];
+	const panelFor = (t: HTMLElement) => document.getElementById(t.getAttribute('aria-controls')!);
+
+	// ── Mobile tab bar ──
+	// One sliding highlight sits under the selected tab. While search is open it
+	// slides to the search button, then slides back (or fades out) when search closes.
+	const tabs = [...document.querySelectorAll<HTMLElement>('[data-tab]')];
+	const mobileSearch = document.querySelector<HTMLElement>('[aria-controls="m-search"]');
+	const indicator = document.querySelector<HTMLElement>('[data-tab-indicator]');
+	let selected: HTMLElement | null = null;
+	let searchOpen = false;
+
+	// Move the highlight under `target`; fade it in in place if it was hidden, fade out for null.
+	function moveIndicator(target: HTMLElement | null, animate = true) {
+		if (!indicator) return;
+		for (const el of [...tabs, mobileSearch]) el?.toggleAttribute('data-active', el === target);
+		if (!target) {
+			indicator.style.opacity = '0';
+			return;
+		}
+		const appearing = indicator.style.opacity !== '1';
+		if (appearing || !animate) indicator.style.transitionProperty = 'opacity';
+		indicator.style.width = `${target.offsetWidth}px`;
+		indicator.style.translate = `${target.offsetLeft}px 0`;
+		indicator.getBoundingClientRect(); // commit position before re-enabling the slide
+		indicator.style.transitionProperty = '';
+		indicator.style.opacity = '1';
+	}
+
+	const updateIndicator = (animate = true) => moveIndicator(searchOpen ? mobileSearch : selected, animate);
+
+	function selectTab(tab: HTMLElement | null) {
+		selected = tab;
+		for (const t of tabs) t.setAttribute('aria-pressed', String(t === tab));
+		updateIndicator();
+	}
+
+	for (const tab of tabs) {
+		tab.addEventListener('click', () => selectTab(tab === selected ? null : tab));
+	}
+
+	// Tab widths change with the viewport (e.g. smaller labels under 375px).
+	window.addEventListener('resize', () => updateIndicator(false));
+
+	// ── Toggles (desktop drop-downs, mobile search) ──
+	function setOpen(toggle: HTMLElement, open: boolean) {
+		toggle.setAttribute('aria-expanded', String(open));
+		panelFor(toggle)?.classList.toggle('open', open);
+		if (toggle === mobileSearch && open !== searchOpen) {
+			searchOpen = open;
+			updateIndicator();
+		}
+	}
+
+	function closeAll(except?: HTMLElement) {
+		for (const t of toggles) if (t !== except) setOpen(t, false);
+	}
+
+	for (const toggle of toggles) {
+		toggle.addEventListener('click', () => {
+			const open = toggle.getAttribute('aria-expanded') !== 'true';
+			closeAll(toggle);
+			setOpen(toggle, open);
+			if (open) panelFor(toggle)?.querySelector<HTMLElement>('input, a')?.focus();
+		});
+	}
+
+	// Close on outside click (clicks inside a toggle or an open panel are ignored).
+	document.addEventListener('click', (e) => {
+		const target = e.target as Element;
+		if (target.closest('[data-toggle], .open')) return;
+		closeAll();
+	});
+
+	document.addEventListener('keydown', (e) => {
+		if (e.key !== 'Escape') return;
+		const openToggle = toggles.find((t) => t.getAttribute('aria-expanded') === 'true');
+		closeAll();
+		openToggle?.focus();
+	});
+</script>
